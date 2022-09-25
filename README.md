@@ -3,7 +3,10 @@
 
 O projeto foi feito a fim de realizar uma analise mais especifica e simplificada dos dados disponibilizados pelo SISU.
 
-Inserindo o ano, semetre e curso (e alguma outra informações opcionais) que se deseja analisar, o código irá gerar uma planilha Excel com as informações disponibilizadas sobre aquele curso no ano-semestre pedido.
-> Podendo realizar comparações das nota de corte de um ano com a oferta de vagas de outro ano (por exemplo caso queira comparar suas notas do sisu com os resultados do periodo anterior)
+Inserindo o ano, semetre e curso (e alguma outra informações opcionais) que se deseja analisar, o programa irá gerar uma planilha Excel com as informações disponibilizadas sobre aquele curso no ano-semestre pedido.
 
-# EM BREVE ADICIONAREI A DEVIDA DOCUMENTAÇÂO PARA O CÒDIGO E O README
+# A implementar
+
+realizar a curva de crescimento de determinado curso (para todas ou uma faculdade especifica) e realizar uma previsão média com base nos dados para o crescimento do ano seguinte
+
+# EM BREVE ADICIONAREI A DEVIDA DOCUMENTAÇÂO PARA O CÓDIGO E O README
