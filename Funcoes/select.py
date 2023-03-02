@@ -6,7 +6,9 @@ def end(erro):
 
 def curso():
     curso = input('Insira curso a ser analisado: ')
-    return curso;
+    if(curso == ""):
+        return None
+    return curso
 
 def ano():
     ano = int(input('Ano: '))
@@ -27,7 +29,7 @@ def regiao():
     desejo = input().lower()
 
     if desejo == 'n' or desejo == 'na' or desejo == 'nã' or desejo == 'nao'  or desejo == 'não':
-        return 'nenhuma'
+        return None
     
     print('\nSelecione região desejada:')
     print('    1 - Sul')
@@ -50,32 +52,62 @@ def regiao():
     else:
         end('Região')
 
-def notas():
-    print('Deseja analisar calculando suas notas ponderadas? S/N')
+def instituicao():
+    print('Deseja analisar apenas uma Instituição de Ensino? S/N')
     desejo = input().lower()
 
-    if desejo == 'n':
-        return [False]
-    elif desejo == 's':
-        print('Insira as notas do TRI:')
-        notas = [float(input('Redação: ')), float(input('Linguagens: ')), float(input('Matemática: ')), float(input('Humanas: ')), float(input('Natureza: '))]
-        return notas
+    if desejo == 'n' or desejo == 'na' or desejo == 'nã' or desejo == 'nao'  or desejo == 'não':
+        return None
+
+    opcao = input('IE: ').upper()
+    print(opcao)
+    return opcao
+
+def notas():
+    print('Insira as notas do TRI:')
+    notas = [float(input('Redação: ')), float(input('Linguagens: ')), float(input('Matemática: ')), float(input('Humanas: ')), float(input('Natureza: '))]
+    return notas
 
 def all():
     curso_var = curso()
     ano_var = ano()
     semestre_var = semestre()
     regiao_var = regiao()
+    instituicao_var = instituicao()
     notas_var = notas()
 
-    return ano_var, semestre_var, curso_var, regiao_var, igc_var, notas_var, corte_var
+    return ano_var, semestre_var, curso_var, regiao_var, instituicao_var,notas_var
 
 ### FUNÇÃO AUXILIAR ###
-def teste():
+
+def teste1():
     curso_var = 'MEDICINA'
-    ano_var = 2022
+    ano_var = 2021
+    semestre_var = 2
+    regiao_var = 'sudeste'
+    instituicao_var = "UFES"
+    notas_var = [980, 690, 840, 700, 720]
+
+    return curso_var, ano_var, semestre_var, regiao_var, instituicao_var, notas_var
+
+def teste2():
+    curso_var = "ODONTOLOGIA"
+    ano_var = 2023
     semestre_var = 1
     regiao_var = 'sudeste'
-    notas_var = [960, 708, 870, 700, 730]
+    instituicao_var = None
+    # Redação, Linguagens, Matemática, Humanas, Natureza
+    notas_var = [960, 667.2, 814.7, 711.2, 659.7]
 
-    return curso_var, ano_var, semestre_var, regiao_var, notas_var
+    return curso_var, ano_var, semestre_var, regiao_var, instituicao_var, notas_var
+
+def teste3():
+    curso_var = None
+    ano_var = 2023
+    semestre_var = 1
+    regiao_var = 'sudeste'
+    instituicao_var = 'UFES'
+    # Redação, Linguagens, Matemática, Humanas, Natureza
+    notas_var = [960, 667.2, 814.7, 711.2, 659.7]
+
+    return curso_var, ano_var, semestre_var, regiao_var, instituicao_var, notas_var

@@ -5,8 +5,10 @@ O projeto foi feito a fim de realizar uma analise mais especifica e simplificada
 
 Inserindo o ano, semetre e curso (e alguma outra informações opcionais) que se deseja analisar, o programa irá gerar uma planilha Excel com as informações disponibilizadas sobre aquele curso no ano-semestre pedido.
 
-# A implementar
+## A implementar
 
 realizar a curva de crescimento de determinado curso (para todas ou uma faculdade especifica) e realizar uma previsão média com base nos dados para o crescimento do ano seguinte
 
-# EM BREVE ADICIONAREI A DEVIDA DOCUMENTAÇÂO PARA O CÓDIGO E O README
+Númeroo de ccolunas agora é fixo, configurar  o código considerando isso.
+
+## EM BREVE ADICIONAREI A DEVIDA DOCUMENTAÇÂO PARA O CÓDIGO E O README
