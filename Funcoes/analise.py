@@ -5,11 +5,11 @@ import Funcoes.visual as visual
 
 def abre_excel(ano, semestre):
     try:
-        dic_dados = pd.read_excel(f'Dados/Vagas ofertadas/Portal Sisu_Sisu {ano}-{semestre}_Vagas ofertadas.xlsx', sheet_name=0)
-        dados = pd.read_excel(f'Dados/Vagas ofertadas/Portal Sisu_Sisu {ano}-{semestre}_Vagas ofertadas.xlsx', sheet_name=1, usecols='C:E, H:P, R, S, V, W, Y, AA, AC, AE')    
+        dic_dados = pd.read_excel(f'data/Vagas ofertadas/Portal Sisu_Sisu {ano}-{semestre}_Vagas ofertadas.xlsx', sheet_name=0)
+        dados = pd.read_excel(f'data/Vagas ofertadas/Portal Sisu_Sisu {ano}-{semestre}_Vagas ofertadas.xlsx', sheet_name=1, usecols='C:E, H:P, R, S, V, W, Y, AA, AC, AE')    
         
-        dic_cortes = pd.read_excel(f'Dados/Inscrições e notas de corte/Portal Sisu_Sisu {ano}-{semestre}_Inscrições e notas de corte.xlsx', sheet_name=0)
-        cortes = pd.read_excel(f'Dados/Inscrições e notas de corte/Portal Sisu_Sisu {ano}-{semestre}_Inscrições e notas de corte.xlsx', sheet_name=1, usecols='E, L, M, Q, T, U')
+        dic_cortes = pd.read_excel(f'data/Inscrições e notas de corte/Portal Sisu_Sisu {ano}-{semestre}_Inscrições e notas de corte.xlsx', sheet_name=0)
+        cortes = pd.read_excel(f'data/Inscrições e notas de corte/Portal Sisu_Sisu {ano}-{semestre}_Inscrições e notas de corte.xlsx', sheet_name=1, usecols='E, L, M, Q, T, U')
     
         return dic_dados, dados, dic_cortes, cortes
     
@@ -78,11 +78,11 @@ def limpa_dic(dic, df):
 
 def filtra_excel(dados, cortes, instituicao, curso):
     
-    cotas_invalidas = ['autodeclarados', 'pretos', 'negros', 'pardos', 'índios', 'indígenas', 'indígena,', 'quilombolas', 'ciganos',  'transexuais', 'vulnerabilidade', 'deficiência', 'necessidades', 'carência', 'inferior', 'regional', 'região', 'microrregiões', 'mesorregiões', 'membros de comunidade', 'residentes', 'residem', 'residam', 'no estado de pernambuco', 'localizadas', 'baixa', 'natal', 'de até um salário-mínimo']
+    cotas_invalidas = ['autodeclarados', 'índios', 'indígena', 'quilombolas', 'ciganos',  'transexuais', 'vulnerabilidade', 'deficiência', 'necessidades', 'carência', 'inferior', 'regional', 'região', 'regiões', 'membros de comunidade', 'residentes', 'residem', 'residam', 'no estado de pernambuco', 'localizadas', 'baixa', 'natal', 'de até um salário-mínimo']
 
     if(curso):
         dados = dados.loc[dados['NO_CURSO']==curso].reset_index(drop=True)
-        cortes = cortes.loc[curso==cortes['NO_CURSO']].reset_index(drop=True)
+        cortes = cortes.loc[cortes['NO_CURSO']==curso].reset_index(drop=True)
     if(instituicao):
         dados = dados.loc[dados['SG_IES']==instituicao].reset_index(drop=True)
         cortes = cortes.loc[cortes['SG_IES']==instituicao].reset_index(drop=True)
@@ -93,25 +93,30 @@ def filtra_excel(dados, cortes, instituicao, curso):
         sys.exit()
 
     ### FILTRA POR COTAS ###
-    i=0
-    while i < cortes.shape[0]:
-        for j in cotas_invalidas:
-            if(j in cortes.iloc[i]['DS_MOD_CONCORRENCIA'].lower()):
-                cortes = cortes.drop(index=i)
-                cortes.reset_index(drop=True, inplace=True)
-                i-=1
-                break
-        i+=1
+    # cortes = cortes[~cortes['DS_MOD_CONCORRENCIA'].str.lower().isin(cotas_invalidas)]
+    conjunto = set()
+    for elem in cotas_invalidas:
+        for index in cortes.index:
+            if elem in cortes.loc[index, 'DS_MOD_CONCORRENCIA'].lower():
+                conjunto.add(index)
+    for index in conjunto:
+        cortes.drop(index, inplace=True)
+    cortes.reset_index(drop=True, inplace=True)
 
-    i=0
-    while i < dados.shape[0]:
-        for j in cotas_invalidas:
-            if(j in dados.iloc[i]['DS_MOD_CONCORRENCIA'].lower()):
-                dados = dados.drop(index=i)
-                dados.reset_index(drop=True, inplace=True)
-                i-=1
-                break
-        i+=1
+    conjunto = set()
+    for elem in cotas_invalidas:
+        for index in dados.index:
+            if elem in dados.loc[index, 'DS_MOD_CONCORRENCIA'].lower():
+                conjunto.add(index)
+    for index in conjunto:
+        dados.drop(index, inplace=True)
+    dados.reset_index(drop=True, inplace=True)
+
+    # merge the two dataframes based on the 'id' column, and only include the 'name' and 'age' columns in the result
+    merged_df = pd.merge(dados, cortes[['QT_INSCRICAO', 'NU_NOTACORTE', 'CO_IES_CURSO', 'DS_MOD_CONCORRENCIA']], on=['CO_IES_CURSO', 'DS_MOD_CONCORRENCIA'])
+
+    # reorder the columns in the resulting dataframe
+    # merged_df = merged_df[['id', 'name', 'age']]
 
     dados.sort_values(by='DS_MOD_CONCORRENCIA', kind='stable', inplace=True, ignore_index=True)
     dados.sort_values(by='CO_IES_CURSO', kind='stable', inplace=True, ignore_index=True)
@@ -127,6 +132,15 @@ def filtra_excel(dados, cortes, instituicao, curso):
     ### INSERE DADOS DE INSCRIÇÕES NO DF PRINCIPAL ###
     dados.insert(14, 'QT_INSCRICAO',  cortes['QT_INSCRICAO'])
     dados.insert(21, 'NU_NOTACORTE',  cortes['NU_NOTACORTE'])
+    
+    
+    dados.sort_values(by='DS_MOD_CONCORRENCIA', kind='stable', inplace=True, ignore_index=True)
+    dados.sort_values(by='CO_IES_CURSO', kind='stable', inplace=True, ignore_index=True)
+    merged_df.sort_values(by='DS_MOD_CONCORRENCIA', kind='stable', inplace=True, ignore_index=True)
+    merged_df.sort_values(by='CO_IES_CURSO', kind='stable', inplace=True, ignore_index=True)
+    if not ((dados['CO_IES_CURSO'] == merged_df['CO_IES_CURSO']).all() and (dados['DS_MOD_CONCORRENCIA'] == merged_df['DS_MOD_CONCORRENCIA']).all()):
+        print('merge deu ruim')
+        sys.exit()
 
     return dados, cortes
 

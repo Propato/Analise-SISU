@@ -5,15 +5,15 @@ def end(erro):
     sys.exit()
 
 def curso():
-    curso = input('Insira curso a ser analisado: ')
+    curso = input('Insira curso a ser analisado: ').upper()
     if(curso == ""):
-        return None
+        end("Curso")
     return curso
 
 def ano():
     ano = int(input('Ano: '))
     
-    if 2019 <= ano <= 2022:
+    if 2019 <= ano <= 2023:
         return ano
     end('Ano')
 
@@ -28,7 +28,7 @@ def regiao():
     print('Deseja analisar destacando uma região? S/N')
     desejo = input().lower()
 
-    if desejo == 'n' or desejo == 'na' or desejo == 'nã' or desejo == 'nao'  or desejo == 'não':
+    if desejo[0] == 'n':
         return None
     
     print('\nSelecione região desejada:')
@@ -56,11 +56,10 @@ def instituicao():
     print('Deseja analisar apenas uma Instituição de Ensino? S/N')
     desejo = input().lower()
 
-    if desejo == 'n' or desejo == 'na' or desejo == 'nã' or desejo == 'nao'  or desejo == 'não':
+    if desejo[0] == 'n':
         return None
 
     opcao = input('IE: ').upper()
-    print(opcao)
     return opcao
 
 def notas():
@@ -78,7 +77,7 @@ def all():
 
     return ano_var, semestre_var, curso_var, regiao_var, instituicao_var,notas_var
 
-### FUNÇÃO AUXILIAR ###
+### FUNÇÔES AUXILIAR ###
 
 def teste1():
     curso_var = 'MEDICINA'
@@ -95,18 +94,7 @@ def teste2():
     ano_var = 2023
     semestre_var = 1
     regiao_var = 'sudeste'
-    instituicao_var = None
-    # Redação, Linguagens, Matemática, Humanas, Natureza
-    notas_var = [960, 667.2, 814.7, 711.2, 659.7]
-
-    return curso_var, ano_var, semestre_var, regiao_var, instituicao_var, notas_var
-
-def teste3():
-    curso_var = None
-    ano_var = 2023
-    semestre_var = 1
-    regiao_var = 'sudeste'
-    instituicao_var = 'UFES'
+    instituicao_var = "UFES"
     # Redação, Linguagens, Matemática, Humanas, Natureza
     notas_var = [960, 667.2, 814.7, 711.2, 659.7]
 

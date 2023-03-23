@@ -1,0 +1,5 @@
+./Funcoes/__pycache__
+./Relatorios/*
+.vscode
+./data/conceito_enade_2021.xlsx
+./data/IGC_2019.xlsx
