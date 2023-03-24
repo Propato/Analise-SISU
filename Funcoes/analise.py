@@ -57,36 +57,38 @@ def media_ponderada(notas, pesos):
     return round(soma_notas/soma_pesos, 2)
 
 def insere_medias(df, dic_df, notas):
-    df['NOTAS'] = (media_ponderada(notas, (df['REDACAO'], df['LINGUAGENS'], df['MATEMATICA'], df['CIENCIAS_HUMANAS'], df['CIENCIAS_NATUREZA']))).to_frame()
-
-    dic_df = pd.concat([dic_df, pd.DataFrame([['NOTAS', 'Médias ponderadas para cada curso']],columns=[dic_df.columns[0], dic_df.columns[1]])])
+    df['NOTAS'] = media_ponderada(notas, [df['REDACAO'], df['LINGUAGENS'], df['MATEMATICA'], df['CIENCIAS_HUMANAS'], df['CIENCIAS_NATUREZA']])
+    df['APROVAÇÃO'] = ((df['NU_NOTACORTE'] - df['NOTAS'])<0)
     
-    df['APROVAÇÃO'] = ((df['NU_NOTACORTE'] - df['NOTAS'])<0).to_frame()
+    dic_df = pd.concat([dic_df, pd.DataFrame([['NOTAS', 'Médias ponderadas para cada curso']],columns=[dic_df.columns[0], dic_df.columns[1]])])
     dic_df = pd.concat([dic_df, pd.DataFrame([['APROVAÇÃO', 'Indica se as suas notas são maiores (escrito VERDADEIRO) ou menores (escrito FALSO) que a nota de corte']],columns=[dic_df.columns[0], dic_df.columns[1]])])
     
     return df, dic_df
 
 def limpa_dic(dic, df):
-    i=0
-    while i < dic.shape[0]:
-        if dic.iloc[i]['Nome da coluna'] not in df.columns:
-            dic = dic.drop(index=i)
-            dic.reset_index(drop=True, inplace=True)
-            i-=1
-        i+=1
+    conjunto = set()
+    for index in dic.index:
+        if dic.loc[index, 'Nome da coluna'] not in df.columns:
+            conjunto.add(index)
+    dic = dic.drop(labels=list(conjunto))
+    dic.reset_index(drop=True, inplace=True)
+
     return dic
 
 def filtra_excel(dados, cortes, instituicao, curso):
     
     cotas_invalidas = ['autodeclarados', 'índios', 'indígena', 'quilombolas', 'ciganos',  'transexuais', 'vulnerabilidade', 'deficiência', 'necessidades', 'carência', 'inferior', 'regional', 'região', 'regiões', 'membros de comunidade', 'residentes', 'residem', 'residam', 'no estado de pernambuco', 'localizadas', 'baixa', 'natal', 'de até um salário-mínimo']
 
-    if(curso):
+    if(curso and instituicao):
+        dados = dados.loc[(dados['NO_CURSO']==curso) & (dados['SG_IES']==instituicao)].reset_index(drop=True)
+        cortes = cortes.loc[(cortes['NO_CURSO']==curso) & (cortes['SG_IES']==instituicao)].reset_index(drop=True)
+    elif(curso):
         dados = dados.loc[dados['NO_CURSO']==curso].reset_index(drop=True)
         cortes = cortes.loc[cortes['NO_CURSO']==curso].reset_index(drop=True)
-    if(instituicao):
+    elif(instituicao):
         dados = dados.loc[dados['SG_IES']==instituicao].reset_index(drop=True)
         cortes = cortes.loc[cortes['SG_IES']==instituicao].reset_index(drop=True)
-    
+        
     ### CHECAGEM - CURSO ###
     if (dados.shape[0] == 0) or (cortes.shape[0] == 0):
         print(f'Curso ou Instituição inválidos, sem ofertas de vagas ou pesos.')
@@ -99,50 +101,23 @@ def filtra_excel(dados, cortes, instituicao, curso):
         for index in cortes.index:
             if elem in cortes.loc[index, 'DS_MOD_CONCORRENCIA'].lower():
                 conjunto.add(index)
-    for index in conjunto:
-        cortes.drop(index, inplace=True)
+    cortes = cortes.drop(labels=list(conjunto))
     cortes.reset_index(drop=True, inplace=True)
-
+    
     conjunto = set()
     for elem in cotas_invalidas:
         for index in dados.index:
             if elem in dados.loc[index, 'DS_MOD_CONCORRENCIA'].lower():
                 conjunto.add(index)
-    for index in conjunto:
-        dados.drop(index, inplace=True)
+    dados = dados.drop(labels=list(conjunto))
     dados.reset_index(drop=True, inplace=True)
-
+    
     # merge the two dataframes based on the 'id' column, and only include the 'name' and 'age' columns in the result
     merged_df = pd.merge(dados, cortes[['QT_INSCRICAO', 'NU_NOTACORTE', 'CO_IES_CURSO', 'DS_MOD_CONCORRENCIA']], on=['CO_IES_CURSO', 'DS_MOD_CONCORRENCIA'])
 
-    # reorder the columns in the resulting dataframe
-    # merged_df = merged_df[['id', 'name', 'age']]
+    merged_df = merged_df[['CO_IES', 'NO_IES', 'SG_IES', 'NO_CAMPUS', 'NO_MUNICIPIO_CAMPUS', 'SG_UF_CAMPUS', 'DS_REGIAO', 'CO_IES_CURSO', 'NO_CURSO', 'DS_GRAU', 'DS_TURNO', 'DS_PERIODICIDADE', 'NU_VAGAS_AUTORIZADAS', 'QT_VAGAS_CONCORRENCIA', 'QT_INSCRICAO', 'DS_MOD_CONCORRENCIA', 'PESO_REDACAO', 'PESO_LINGUAGENS', 'PESO_MATEMATICA', 'PESO_CIENCIAS_HUMANAS', 'PESO_CIENCIAS_NATUREZA', 'NU_NOTACORTE']]
 
-    dados.sort_values(by='DS_MOD_CONCORRENCIA', kind='stable', inplace=True, ignore_index=True)
-    dados.sort_values(by='CO_IES_CURSO', kind='stable', inplace=True, ignore_index=True)
-    
-    cortes.sort_values(by='DS_MOD_CONCORRENCIA', kind='stable', inplace=True, ignore_index=True)
-    cortes.sort_values(by='CO_IES_CURSO', kind='stable', inplace=True, ignore_index=True)
-    
-    ### CHECAGEM - COTAS ###
-    if not ((dados['CO_IES_CURSO'] == cortes['CO_IES_CURSO']).all() and (dados['DS_MOD_CONCORRENCIA'] == cortes['DS_MOD_CONCORRENCIA']).all()):
-        print('Dados dos cursos e cortes não batem, favor checar as planilhas e tentar novamente.')
-        sys.exit()
-
-    ### INSERE DADOS DE INSCRIÇÕES NO DF PRINCIPAL ###
-    dados.insert(14, 'QT_INSCRICAO',  cortes['QT_INSCRICAO'])
-    dados.insert(21, 'NU_NOTACORTE',  cortes['NU_NOTACORTE'])
-    
-    
-    dados.sort_values(by='DS_MOD_CONCORRENCIA', kind='stable', inplace=True, ignore_index=True)
-    dados.sort_values(by='CO_IES_CURSO', kind='stable', inplace=True, ignore_index=True)
-    merged_df.sort_values(by='DS_MOD_CONCORRENCIA', kind='stable', inplace=True, ignore_index=True)
-    merged_df.sort_values(by='CO_IES_CURSO', kind='stable', inplace=True, ignore_index=True)
-    if not ((dados['CO_IES_CURSO'] == merged_df['CO_IES_CURSO']).all() and (dados['DS_MOD_CONCORRENCIA'] == merged_df['DS_MOD_CONCORRENCIA']).all()):
-        print('merge deu ruim')
-        sys.exit()
-
-    return dados, cortes
+    return merged_df, cortes
 
 def dados_sisu(curso, ano, semestre, regiao, instituicao, notas):
     print('='*127)
@@ -155,31 +130,20 @@ def dados_sisu(curso, ano, semestre, regiao, instituicao, notas):
 
     dados, cortes = filtra_excel(dados, cortes, instituicao, curso)
 
-    ### REORGANIZA DIC_DADOS ###
+    ### REORGANIZA DICs ###
     dic_dados = limpa_dic(dic_dados, dados)
-    ### REORGANIZA DIC_CORTES ###
     dic_cortes = limpa_dic(dic_cortes, cortes)
 
-    for i in range(4):
-        dic_cortes = dic_cortes.drop(index=0)
-        dic_cortes.reset_index(drop=True, inplace=True)
-
-    ### FINALIZA DIC_DADOS ###
-    dic_dados1 = dic_dados[:14]
-    dic_dados2 = dic_dados[14:]
-
-    dic_dados1 = pd.concat([dic_dados1, dic_cortes[1:]])
-    dic_dados = pd.concat([dic_dados1, dic_dados2])
-    dic_dados = pd.concat([dic_dados, dic_cortes[:1]])
-
-    dic_dados.reset_index(drop=True, inplace=True)
-
+    dic_dados = pd.concat([dic_dados[:14], dic_cortes[5:], dic_dados[14:], dic_cortes[4:5]]).reset_index(drop=True)
+    
     ### SIMPLIFICA NOME PARA COLUNA DOS PESOS ###
-    dados.rename({'PESO_REDACAO': 'REDACAO'}, axis = 1, inplace=True)
-    dados.rename({'PESO_LINGUAGENS': 'LINGUAGENS'}, axis = 1, inplace=True)
-    dados.rename({'PESO_MATEMATICA': 'MATEMATICA'}, axis = 1, inplace=True)
-    dados.rename({'PESO_CIENCIAS_HUMANAS': 'CIENCIAS_HUMANAS'}, axis = 1, inplace=True)
-    dados.rename({'PESO_CIENCIAS_NATUREZA': 'CIENCIAS_NATUREZA'}, axis = 1, inplace=True)
+    dados.rename(columns={
+        'PESO_REDACAO': 'REDACAO',
+        'PESO_LINGUAGENS': 'LINGUAGENS',
+        'PESO_MATEMATICA': 'MATEMATICA',
+        'PESO_CIENCIAS_HUMANAS': 'CIENCIAS_HUMANAS',
+        'PESO_CIENCIAS_NATUREZA': 'CIENCIAS_NATUREZA'
+    }, inplace=True)
 
     if(curso and instituicao):
         print(f'Dados de {curso}/{instituicao} processados.')
