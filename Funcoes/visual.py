@@ -2,51 +2,32 @@ from openpyxl.styles import PatternFill, Border, Side, Alignment
 from openpyxl.comments import Comment
 import string
 
-def cores(wb, df, curso, regiao):
-    aprovado = 0
-
-    ws = wb[curso]
-
-    #define cores
-    red = PatternFill(patternType='solid', fgColor='ff2800')
-    green = PatternFill(patternType='solid', fgColor='5cb800')
-    blue = PatternFill(patternType='solid', fgColor='39A7FA')
-    lilac = PatternFill(patternType='solid', fgColor='00CCCCFF')
-
-    for i in range(df.shape[0]):
-
-        if (df.iloc[i]['DS_REGIAO']).lower() == regiao:
-            if ws[f'X{i+2}'].value:
-                j=0
-                for A in list(string.ascii_uppercase):
-                    ws[f'{A}{i+2}'].fill = lilac
-                    j+=1
-                    if j>=df.shape[1]:
-                        break
-                if not j>=df.shape[1]:
-                    for A in list(string.ascii_uppercase):
-                        ws[f'A{A}{i+2}'].fill = lilac
-                        j+=1
-                        if j>=df.shape[1]:
-                            break
-            ws[f'G{i+2}'].fill = blue
-
-        if ws[f'X{i+2}'].value:
-            ws[f'X{i+2}'].fill = green
-            ws[f'C{i+2}'].fill = green
-            aprovado+=1
-        else:
-            ws[f'X{i+2}'].fill = red
-            ws[f'C{i+2}'].fill = red
-    
-    ws['X1'].value = f'APROVAÇÃO ({aprovado/df.shape[0]:.2%})'
+def cores(df, regiao):
+    # Define colors
+    red = '#ff2800'
+    green = '#5cb800'
+    blue = '#39A7FA'
+    lilac = '#ccccff'
+            
+    df = df.style\
+        .apply(lambda row: [('background-color: '+ lilac) if (row['DS_REGIAO'].lower() == regiao and row['APROVAÇÃO'] == True) else '' for col in row], axis=1)\
+        .apply(lambda row: [('background-color: '+ green) if (row['APROVAÇÃO'] == True) else ('background-color: '+ red) for col in row], axis=1, subset=['SG_IES', 'APROVAÇÃO'])\
+        .apply(lambda row: [('background-color: '+ blue) if (row['DS_REGIAO'].lower() == regiao) else '' for col in row], axis=1, subset=['DS_REGIAO'])
 
     print('Cores processadas.')
+    return df
+
 
 def layout(wb, df, dic_df, curso, notas):
 
     ws0 = wb['Dicionário de dados']
     ws1 = wb[curso]
+    
+    # # adiciona texto à célula de cabeçalho
+    # aprovado = df_copy['APROVAÇÃO'].sum()
+    # total = df_copy.shape[0]
+    # df_copy.loc[len(df_copy), 'APROVAÇÃO'] = f'APROVAÇÃO ({aprovado/total:.2%})'
+    # ws['X1'].value = f'APROVAÇÃO ({aprovado/df.shape[0]:.2%})'
 
     borda = Border(right=Side(border_style='thin', color='00000000'), bottom=Side(border_style='thin', color='00000000'))
     alinhamento = Alignment(horizontal='center', vertical='center')

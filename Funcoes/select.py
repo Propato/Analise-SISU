@@ -94,7 +94,7 @@ def teste2():
     ano_var = 2023
     semestre_var = 1
     regiao_var = 'sudeste'
-    instituicao_var = "UFES"
+    instituicao_var = None
     # Redação, Linguagens, Matemática, Humanas, Natureza
     notas_var = [960, 667.2, 814.7, 711.2, 659.7]
 

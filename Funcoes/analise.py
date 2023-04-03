@@ -1,7 +1,7 @@
 import pandas as pd
 import openpyxl
 import sys
-import Funcoes.visual as visual
+from Funcoes.visual import cores, layout
 
 def abre_excel(ano, semestre):
     try:
@@ -20,32 +20,25 @@ def abre_excel(ano, semestre):
 
 def gera_relatorio(df, dic_df, ano, semestre, cursoInstituicao, regiao, notas):
     print("Curso | Instituicao:", cursoInstituicao + ".")
-    writer = pd.ExcelWriter(f'Relatorios/{cursoInstituicao}_{ano}_{semestre}.xlsx', engine='openpyxl')
-
-    dic_df.to_excel(writer, index=False, sheet_name='Dicionário de dados')
-    df.to_excel(writer, index=False, sheet_name=cursoInstituicao)
-
-    writer.save()
-
-    wb = openpyxl.load_workbook(f"Relatorios/{cursoInstituicao}_{ano}_{semestre}.xlsx")
-    ws0 = wb['Dicionário de dados']
     
-    ### SIMPLIFICA NOME PARA OS PESOS NO DIC ###
-    areas = ['REDACAO', 'LINGUAGENS', 'MATEMATICA', 'CIENCIAS_HUMANAS', 'CIENCIAS_NATUREZA']
-    j=0
-    for i in range(1, dic_df.shape[0]+2):
-        if areas[j] in ws0[f'A{i}'].value:
-            ws0[f'A{i}'].value = areas[j]
-            j+=1
-        if j>=5:
-            break
+    path = f'Relatorios/{cursoInstituicao}_{ano}_{semestre}.xlsx'
 
-    ### ATUALIZA O VISUAL DA TABELA NO EXCEL ###
-    visual.cores(wb, df, cursoInstituicao, regiao)
-    visual.layout(wb, df, dic_df, cursoInstituicao, notas)
+    with pd.ExcelWriter(path, engine='openpyxl') as writer:
+        dic_df.to_excel(writer, index=False, sheet_name='Dicionário de dados')
+        df.to_excel(writer, index=False, sheet_name=cursoInstituicao)
 
-    wb.save(f'Relatorios/{cursoInstituicao}_{ano}_{semestre}.xlsx')
-    print(f'Arquivo: Relatorios/{cursoInstituicao}_{ano}_{semestre}.xlsx')
+        # wb = openpyxl.load_workbook(f"Relatorios/{cursoInstituicao}_{ano}_{semestre}.xlsx")
+
+        ### ATUALIZA O VISUAL DA TABELA NO EXCEL ###
+        df_colors = cores(df, regiao)
+        df_colors.to_excel(writer, index=False, sheet_name=cursoInstituicao)
+    
+    # ### ATUALIZA O VISUAL DA TABELA NO EXCEL ###
+    # cores(wb, df, cursoInstituicao, regiao)
+    # # layout(wb, df, dic_df, cursoInstituicao, notas)
+
+    # wb.save(path)
+    print('Arquivo:', path)
 
 def media_ponderada(notas, pesos):
     soma_pesos = 0
@@ -60,8 +53,8 @@ def insere_medias(df, dic_df, notas):
     df['NOTAS'] = media_ponderada(notas, [df['REDACAO'], df['LINGUAGENS'], df['MATEMATICA'], df['CIENCIAS_HUMANAS'], df['CIENCIAS_NATUREZA']])
     df['APROVAÇÃO'] = ((df['NU_NOTACORTE'] - df['NOTAS'])<0)
     
-    dic_df = pd.concat([dic_df, pd.DataFrame([['NOTAS', 'Médias ponderadas para cada curso']],columns=[dic_df.columns[0], dic_df.columns[1]])])
-    dic_df = pd.concat([dic_df, pd.DataFrame([['APROVAÇÃO', 'Indica se as suas notas são maiores (escrito VERDADEIRO) ou menores (escrito FALSO) que a nota de corte']],columns=[dic_df.columns[0], dic_df.columns[1]])])
+    dic_df = pd.concat([dic_df, pd.DataFrame([['NOTAS', 'Médias ponderadas para cada curso'], ['APROVAÇÃO', 'Indica se as suas notas são maiores (escrito VERDADEIRO) ou menores (escrito FALSO) que a nota de corte']],columns=[dic_df.columns[0], dic_df.columns[1]])])
+    # dic_df = pd.concat([dic_df, pd.DataFrame([],columns=[dic_df.columns[0], dic_df.columns[1]])])
     
     return df, dic_df
 
@@ -137,13 +130,17 @@ def dados_sisu(curso, ano, semestre, regiao, instituicao, notas):
     dic_dados = pd.concat([dic_dados[:14], dic_cortes[5:], dic_dados[14:], dic_cortes[4:5]]).reset_index(drop=True)
     
     ### SIMPLIFICA NOME PARA COLUNA DOS PESOS ###
-    dados.rename(columns={
-        'PESO_REDACAO': 'REDACAO',
-        'PESO_LINGUAGENS': 'LINGUAGENS',
-        'PESO_MATEMATICA': 'MATEMATICA',
-        'PESO_CIENCIAS_HUMANAS': 'CIENCIAS_HUMANAS',
-        'PESO_CIENCIAS_NATUREZA': 'CIENCIAS_NATUREZA'
-    }, inplace=True)
+    rename_dict = {
+    'PESO_REDACAO': 'REDACAO',
+    'PESO_LINGUAGENS': 'LINGUAGENS',
+    'PESO_MATEMATICA': 'MATEMATICA',
+    'PESO_CIENCIAS_HUMANAS': 'CIENCIAS_HUMANAS',
+    'PESO_CIENCIAS_NATUREZA': 'CIENCIAS_NATUREZA'
+    }
+
+    dados.rename(columns=rename_dict, inplace=True)
+    for i, (old_name, new_name) in enumerate(rename_dict.items()):
+        dic_dados.loc[i + 15, "Nome da coluna"] = new_name
 
     if(curso and instituicao):
         print(f'Dados de {curso}/{instituicao} processados.')
