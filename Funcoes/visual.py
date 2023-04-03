@@ -17,6 +17,19 @@ def cores(df, regiao):
     print('Cores processadas.')
     return df
 
+def layout2(df):
+    # border = openpyxl.styles.Side(border_style='thin', color='00000000')
+
+    # df.styles.Border(left=border, 
+    #                 right=border, 
+    #                 top=border, 
+    #                 bottom=border)
+    def border(val):
+        return 'border-right: 1px solid black; border-bottom: 1px solid black;'
+            
+    df.applymap(border)
+
+    return df
 
 def layout(wb, df, dic_df, curso, notas):
 

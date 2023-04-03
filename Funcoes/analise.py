@@ -1,7 +1,7 @@
 import pandas as pd
 import openpyxl
 import sys
-from Funcoes.visual import cores, layout
+from Funcoes.visual import cores, layout, layout2
 
 def abre_excel(ano, semestre):
     try:
@@ -31,11 +31,14 @@ def gera_relatorio(df, dic_df, ano, semestre, cursoInstituicao, regiao, notas):
 
         ### ATUALIZA O VISUAL DA TABELA NO EXCEL ###
         df_colors = cores(df, regiao)
-        df_colors.to_excel(writer, index=False, sheet_name=cursoInstituicao)
+        # df_colors.to_excel(writer, index=False, sheet_name=cursoInstituicao)
     
     # ### ATUALIZA O VISUAL DA TABELA NO EXCEL ###
     # cores(wb, df, cursoInstituicao, regiao)
-    # # layout(wb, df, dic_df, cursoInstituicao, notas)
+
+    # layout(wb, df, dic_df, cursoInstituicao, notas)
+        df_visual = layout2(df_colors)
+        df_visual.to_excel(writer, index=False, sheet_name=cursoInstituicao)
 
     # wb.save(path)
     print('Arquivo:', path)
