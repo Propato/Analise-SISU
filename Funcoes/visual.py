@@ -2,6 +2,14 @@ from openpyxl.styles import PatternFill, Border, Side, Alignment
 from openpyxl.comments import Comment
 import string
 
+def approval_column_name(df):
+    # adiciona texto à célula de cabeçalho
+    df_approved = df['APROVAÇÃO']
+    total = df_approved.size
+    approved = df_approved.loc[df_approved == True].size
+
+    return f'APROVAÇÃO ({approved/total:.2%})'
+    
 def cores(df, regiao):
     # Define colors
     red = '#ff2800'
@@ -17,17 +25,14 @@ def cores(df, regiao):
     print('Cores processadas.')
     return df
 
-def layout2(df):
-    # border = openpyxl.styles.Side(border_style='thin', color='00000000')
-
-    # df.styles.Border(left=border, 
-    #                 right=border, 
-    #                 top=border, 
-    #                 bottom=border)
-    def border(val):
-        return 'border-right: 1px solid black; border-bottom: 1px solid black;'
-            
-    df.applymap(border)
+def layout2(df):    
+    df.set_properties(**{
+        'border': '1px solid black',
+        'text-align': 'center',
+        'vertical-align': 'middle',
+        'column-width': '20px',
+        'row-height': '30px'
+        })
 
     return df
 
@@ -36,11 +41,7 @@ def layout(wb, df, dic_df, curso, notas):
     ws0 = wb['Dicionário de dados']
     ws1 = wb[curso]
     
-    # # adiciona texto à célula de cabeçalho
-    # aprovado = df_copy['APROVAÇÃO'].sum()
-    # total = df_copy.shape[0]
-    # df_copy.loc[len(df_copy), 'APROVAÇÃO'] = f'APROVAÇÃO ({aprovado/total:.2%})'
-    # ws['X1'].value = f'APROVAÇÃO ({aprovado/df.shape[0]:.2%})'
+    
 
     borda = Border(right=Side(border_style='thin', color='00000000'), bottom=Side(border_style='thin', color='00000000'))
     alinhamento = Alignment(horizontal='center', vertical='center')
