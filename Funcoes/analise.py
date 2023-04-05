@@ -1,7 +1,7 @@
 import pandas as pd
 import openpyxl
 import sys
-from Funcoes.visual import cores, layout, layout2
+from Funcoes.visual import cores, layout2
 
 def abre_excel(ano, semestre):
     try:
@@ -24,21 +24,27 @@ def gera_relatorio(df, dic_df, ano, semestre, cursoInstituicao, regiao, notas):
     path = f'Relatorios/{cursoInstituicao}_{ano}_{semestre}.xlsx'
 
     with pd.ExcelWriter(path, engine='openpyxl') as writer:
-        dic_df.to_excel(writer, index=False, sheet_name='Dicionário de dados')
+        df = cores(df, regiao)
+        # dic_df.to_excel(writer, index=False, sheet_name='Dicionário de dados')
         df.to_excel(writer, index=False, sheet_name=cursoInstituicao)
+        
+        workbook = writer.book
+
+            # Get the worksheet object from the workbook
+        worksheet = workbook[cursoInstituicao]
+        layout2(df, worksheet, notas)
 
         # wb = openpyxl.load_workbook(f"Relatorios/{cursoInstituicao}_{ano}_{semestre}.xlsx")
 
         ### ATUALIZA O VISUAL DA TABELA NO EXCEL ###
-        df_colors = cores(df, regiao)
         # df_colors.to_excel(writer, index=False, sheet_name=cursoInstituicao)
     
     # ### ATUALIZA O VISUAL DA TABELA NO EXCEL ###
     # cores(wb, df, cursoInstituicao, regiao)
 
     # layout(wb, df, dic_df, cursoInstituicao, notas)
-        df_visual = layout2(df_colors)
-        df_visual.to_excel(writer, index=False, sheet_name=cursoInstituicao)
+        # df_visual = layout2(df_colors)
+        # df_visual.to_excel(writer, index=False, sheet_name=cursoInstituicao)
 
     # wb.save(path)
     print('Arquivo:', path)
